@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { FRONTEND_URI, SERVER_URI } from './constants'
+
 export default function App() {
   const [games, setGames] = useState([])
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetch('http://localhost:3001/games')
+    fetch(`${SERVER_URI}/games`)
       .then(res => res.json())
       .then(setGames)
       .catch(err => console.error('Failed to fetch games:', err))
   }, [])
 
   const createGame = () => {
-    fetch('http://localhost:3001/create', { method: 'POST' })
+    fetch(`${SERVER_URI}/create`, { method: 'POST' })
       .then(res => res.json())
-      .then(({ link }) => navigate(link.replace('http://localhost:5173', '')))
+      .then(({ link }) => navigate(link.replace(`${FRONTEND_URI}`, '')))
       .catch(err => console.error('Failed to create game:', err))
   }
 

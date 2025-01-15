@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 
 import socket from './socket'
+import { SERVER_URI } from './constants'
 
 export default function App() {
   const { gameId } = useParams()
@@ -32,7 +33,7 @@ export default function App() {
   useEffect(() => {
     const checkGameExists = async () => {
       try {
-        const response = await fetch(`http://localhost:3001/games/${gameId}`)
+        const response = await fetch(`${SERVER_URI}/games/${gameId}`)
         const data = await response.json()
         if (Array.isArray(data)) {
           setGameExists(true)
