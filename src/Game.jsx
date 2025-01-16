@@ -4,13 +4,15 @@ import { useParams } from 'react-router-dom'
 import socket from './socket'
 import { SERVER_URI } from './constants'
 
-export default function App() {
+export default function Game() {
   const { gameId } = useParams()
   const [players, setPlayers] = useState([])
   const [lastClicked, setLastClicked] = useState(null)
   const [playerName, setPlayerName] = useState('')
   const [inputName, setInputName] = useState('')
-  const [gameExists, setGameExists] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [WSError, setWSError] = useState(null)
 
   useEffect(() => {
     function onConnect() {
@@ -21,27 +23,38 @@ export default function App() {
       console.log('Disconnected from socket server:', reason)
     }
 
+    function onWSError(error) {
+      setWSError(error)
+    }
+
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
+    socket.on('error', onWSError)
 
     return () => {
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
+      socket.off('error', onWSError)
     }
   }, [])
 
   useEffect(() => {
     const checkGameExists = async () => {
       try {
+        setIsLoading(true)
+        setError(null)
         const response = await fetch(`${SERVER_URI}/games/${gameId}`)
-        const data = await response.json()
-        if (Array.isArray(data)) {
-          setGameExists(true)
-        } else {
-          setGameExists(false)
+        if (!response.ok) {
+          throw new Error()
         }
-      } catch (error) {
-        setGameExists(false)
+        const data = await response.json()
+        if (data.message) {
+          setError(data.message)
+        }
+      } catch {
+        setError('Could not connect to the server. Please try again later')
+      } finally {
+        setIsLoading(false)
       }
     }
     checkGameExists()
@@ -52,7 +65,8 @@ export default function App() {
       socket.emit('join-game', { gameId, playerName })
     }
 
-    const onPlayersUpdate = players => setPlayers(players)
+    const onPlayersUpdate = ({ players }) => setPlayers(players)
+
     const onButtonUpdate = ({ clickedBy }) => setLastClicked(clickedBy)
 
     socket.on('players-update', onPlayersUpdate)
@@ -76,11 +90,20 @@ export default function App() {
 
   return (
     <div className='flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4'>
-      {gameExists === null ? (
-        <h2 className='text-xl text-gray-500'>Loading...</h2>
-      ) : gameExists === false ? (
-        <h2 className='text-xl text-red-500 font-semibold'>Game not found</h2>
-      ) : !playerName ? (
+      <h2 className='text-3xl mb-4'>Game: {gameId}</h2>
+
+      {isLoading && <div className='text-gray-500 text-xl'>Loading...</div>}
+
+      {error && <div className='text-red-500 text-xl font-semibold'>{error}</div>}
+
+      {WSError && (
+        <div className='flex flex-col items-center'>
+          <p className='text-red-500 font-semibold text-xl mb-2'>{WSError}</p>
+          <a className='text-blue-600 hover:underline' href='/'>Go to Home page</a>
+        </div>
+      )}
+
+      {isLoading || error || WSError ? null : !playerName ? (
         <div className='text-center mb-6'>
           <h2 className='text-2xl mb-2'>Enter Player Name</h2>
           <input
@@ -104,7 +127,6 @@ export default function App() {
         </div>
       ) : (
         <div className='text-center'>
-          <h2 className='text-3xl mb-4'>Game: {gameId}</h2>
           <h3 className='text-xl font-semibold mb-2'>Players:</h3>
           <ul className='list-none space-y-2 mb-4'>
             {players.map(player => (

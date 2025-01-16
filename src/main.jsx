@@ -1,9 +1,9 @@
 import { createRoot } from 'react-dom/client'
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import './index.css'
 import App from './App'
-import Join from './Join'
+import Game from './Game'
 
 createRoot(document.getElementById('root')).render(
   <HashRouter>
@@ -14,7 +14,11 @@ createRoot(document.getElementById('root')).render(
       />
       <Route
         path='/games/:gameId'
-        element={<Join />}
+        element={<Game />}
+      />
+      <Route
+        path='/games'
+        element={<Navigate to='/' />}
       />
     </Routes>
   </HashRouter>
