@@ -66,13 +66,13 @@ export default function App() {
           <h3 className='text-xl font-semibold mb-2'>Available Games:</h3>
           {games.length > 0 ? (
             <ul className='list-none space-y-2'>
-              {games.map(({ gameId, players }) => (
-                <li key={gameId}>
+              {games.map(game => (
+                <li key={game.id}>
                   <a
-                    href={`#/games/${gameId}`}
+                    href={`#/games/${game.id}`}
                     className='text-red-500 hover:text-red-700'
                   >
-                    Game: {gameId} | Players: {players.length}
+                    Game: {game.name} | Players: {game.player_count}
                   </a>
                 </li>
               ))}
